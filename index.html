@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flåklypa Grand Prix</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="game-wrap">
+    <!-- Lav intern oppløsning, skaleres opp med nearest-neighbor (pixel art) -->
+    <canvas id="screen" width="480" height="270"></canvas>
+
+    <!-- Meny-overlay -->
+    <div id="menu" class="overlay">
+      <h1>FLÅKLYPA<br><span>GRAND PRIX</span></h1>
+      <p class="pick">Velg bil — <b>←</b> / <b>→</b></p>
+      <div id="car-choices"></div>
+      <p class="start">Trykk <b>ENTER</b> for å starte</p>
+      <p class="controls">Styr: piltaster / WASD &nbsp;·&nbsp; Bruk gjenstand: <b>MELLOMROM</b> &nbsp;·&nbsp; Pause: <b>ESC</b></p>
+    </div>
+
+    <!-- Mål-overlay -->
+    <div id="finish" class="overlay hidden">
+      <h1>MÅL!</h1>
+      <p id="finish-place"></p>
+      <p class="start">Trykk <b>ENTER</b> for å kjøre igjen</p>
+    </div>
+
+    <!-- Pause-overlay -->
+    <div id="pause" class="overlay hidden">
+      <h1>PAUSE</h1>
+      <p class="start">Trykk <b>ESC</b> for å fortsette</p>
+    </div>
+  </div>
+
+  <!-- Lastes som klassiske skript i rekkefølge (fungerer fra file://) -->
+  <script src="js/config.js"></script>
+  <script src="js/assets.js"></script>
+  <script src="js/specs.js"></script>
+  <script src="js/track.js"></script>
+  <script src="js/car.js"></script>
+  <script src="js/ai.js"></script>
+  <script src="js/powerups.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

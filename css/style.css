@@ -1,0 +1,90 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  background: #0d0f12;
+  color: #fff;
+  font-family: "Courier New", monospace;
+  overflow: hidden;
+}
+
+#game-wrap {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#screen {
+  /* Skarp pixel art ved oppskalering */
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  width: min(100vw, 177.78vh);   /* behold 16:9 */
+  height: min(56.25vw, 100vh);
+  background: #2d5a2d;
+  display: block;
+}
+
+/* ---- Overlays ---- */
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 14px;
+  background: rgba(8, 12, 20, 0.82);
+  text-shadow: 2px 2px 0 #000;
+}
+.overlay.hidden { display: none; }
+
+.overlay h1 {
+  font-size: clamp(28px, 6vw, 64px);
+  letter-spacing: 4px;
+  color: #ffd23f;
+  line-height: 1.05;
+}
+.overlay h1 span { color: #ff5a3c; font-size: 0.7em; }
+
+.overlay p { font-size: clamp(13px, 2vw, 20px); }
+.overlay .pick { color: #cde; }
+.overlay .start { color: #8fffa0; animation: blink 1s steps(2) infinite; }
+.overlay .controls { color: #99a; font-size: clamp(11px, 1.4vw, 15px); margin-top: 8px; }
+.overlay b { color: #ffd23f; }
+
+@keyframes blink { 50% { opacity: 0.35; } }
+
+/* ---- Bilvalg ---- */
+#car-choices {
+  display: flex;
+  gap: 22px;
+  align-items: flex-end;
+  margin: 6px 0;
+}
+.car-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border: 3px solid transparent;
+  border-radius: 8px;
+  opacity: 0.45;
+  transition: opacity .1s, transform .1s;
+}
+.car-choice.selected {
+  opacity: 1;
+  border-color: #ffd23f;
+  transform: translateY(-6px) scale(1.05);
+  background: rgba(255, 210, 63, 0.08);
+}
+.car-choice canvas {
+  image-rendering: pixelated;
+  width: 96px; height: 96px;
+}
+.car-choice .name { font-size: 15px; color: #fff; font-weight: bold; }
+.car-choice .stats { font-size: 11px; color: #9bd; line-height: 1.5; }
