@@ -1,150 +1,182 @@
 // Bil med arcade top-down-fysikk. Brukes for både spiller og AI.
 class Car {
-  constructor(spec, start, isPlayer) {
+  constructor(spec, start, isPlayer, id) {
     this.spec = spec;
     this.isPlayer = isPlayer;
+    this.id = id;
     this.x = start.x;
     this.y = start.y;
     this.heading = start.heading;
     this.vx = 0;
     this.vy = 0;
 
-    // Løpsstatus
-    this.lap = 0;            // antall fullførte runder
-    this.passedHalf = false; // har passert midten siden sist startlinje-kryss
-    this.lastWp = 0;
-    this.progress = 0;       // for rangering
+    // Bane-tilstand (settes i startRace via full skanning)
+    this.near = null;
+    this.nearSeg = 0;
+
+    // Løpsprogresjon (kontinuerlig arc-lengde tilbakelagt fra start)
+    this.cont = 0;
+    this.lastRaw = 0;
+    this.lap = 0;
+    this.progress = 0;
     this.finished = false;
     this.finishTime = 0;
+    this.finishOrder = 0;
     this.place = 0;
 
+    // Rundetider (oppdateres fra main)
+    this.lapTimes = [];
+    this.bestLap = Infinity;
+    this.currentLapStart = 0;
+    this._timedLap = 0;
+
     // Effekter / gjenstander
-    this.item = null;        // "oil" | "smoke" | "boost" | null
+    this.item = null;            // "oil" | "smoke" | "boost" | null
     this.boostTimer = 0;
-    this.slipTimer = 0;      // sklir etter olje
-    this.smokeTimer = 0;     // inne i røyk
-    this.useItemNow = false; // settes av input/AI
+    this.boostJustStarted = 0;   // kort vindu der fartstaket er løsnet (boost-kick)
+    this.slipTimer = 0;
+    this.smokeTimer = 0;
+    this.useItemNow = false;
+
+    // AI-hjelpere
+    this.aiSkill = 1;
+    this.aiItemTimer = undefined;
+    this.lowSpeedTime = 0;
+    this.recoverTimer = 0;
 
     // Visuelt
-    this.wobble = 0;         // liten "wobble" når man sklir
+    this.wobble = 0;
+    this.frames = ASSETS.cars[spec.id]; // rotasjonsframe-sett (kan overstyres av livery)
+    this.tagColor = isPlayer ? "#ffd23f" : spec.colors.body;
+
+    // Hendelser / emisjon
+    this.hitWall = null;
+    this.emitAcc = 0;
+    this.skidAcc = 0;
   }
 
   get speed() { return Math.hypot(this.vx, this.vy); }
 
-  // controls: { throttle: -1..1, steer: -1..1 }
-  update(dt, controls, track, world) {
+  update(dt, controls, track, particles) {
     if (this.finished) controls = { throttle: 0, steer: 0 };
 
-    // Tidsnedtelling på effekter
     if (this.boostTimer > 0) this.boostTimer -= dt;
+    if (this.boostJustStarted > 0) this.boostJustStarted -= dt;
     if (this.slipTimer > 0) this.slipTimer -= dt;
     if (this.smokeTimer > 0) this.smokeTimer -= dt; else this.smokeTimer = 0;
 
-    const onTrack = track.isOnTrack(this.x, this.y);
+    const near0 = this.near;                       // forrige frames projeksjon (1-frame etterslep — ok)
+    const onTrack0 = near0.dist <= track.halfWidth;
     const boosting = this.boostTimer > 0;
     const inSmoke = this.smokeTimer > 0;
 
     let maxSpeed = this.spec.topSpeed;
     if (boosting) maxSpeed *= CONFIG.BOOST_FACTOR;
-    if (!onTrack) maxSpeed *= CONFIG.OFFTRACK_MAXSPEED;
+    if (!onTrack0) maxSpeed *= CONFIG.OFFTRACK_MAXSPEED;
     if (inSmoke) maxSpeed *= 0.6;
 
     const cos = Math.cos(this.heading), sin = Math.sin(this.heading);
-
-    // Motorkraft langs kjøreretning
     const accel = controls.throttle * this.spec.accel * (boosting ? 1.4 : 1);
     this.vx += cos * accel * dt;
     this.vy += sin * accel * dt;
 
-    // Styring — skaleres med fart, og snur "riktig vei" ved rygging
     const fwd = this.vx * cos + this.vy * sin;
     const speedFactor = Math.min(1, this.speed / 55);
     const dirSign = fwd >= 0 ? 1 : -1;
     this.heading += controls.steer * this.spec.turnRate * dt * speedFactor * dirSign;
 
-    // Dekomponer fart i forover/side relativt til (ny) kjøreretning
     const c2 = Math.cos(this.heading), s2 = Math.sin(this.heading);
     let fComp = this.vx * c2 + this.vy * s2;
     let lComp = -this.vx * s2 + this.vy * c2;
 
-    // Veigrep: hvor mye sidefart beholdes pr. steg (høyt = mye sleng)
     let lateralKeep;
-    if (this.slipTimer > 0) lateralKeep = 0.985;           // olje = nesten ingen grep
-    else if (!onTrack) lateralKeep = 0.86;                 // gress/grus = mister grep
-    else lateralKeep = 1 - this.spec.grip * 0.9;           // normalt grep fra spec
-    const stepK = Math.pow(lateralKeep, dt * 60);
-    lComp *= stepK;
+    if (this.slipTimer > 0) lateralKeep = 0.985;
+    else if (!onTrack0) lateralKeep = 0.86;
+    else lateralKeep = 1 - this.spec.grip * 0.9;
+    lComp *= Math.pow(lateralKeep, dt * 60);
 
     this.wobble = Math.min(1, Math.abs(lComp) / 80);
 
-    // Sett sammen fart igjen
     this.vx = fComp * c2 + lComp * (-s2);
     this.vy = fComp * s2 + lComp * (c2);
 
-    // Generell luft-/rullemotstand
-    const drag = Math.pow(onTrack ? 0.993 : CONFIG.OFFTRACK_DRAG, dt * 60);
-    this.vx *= drag;
-    this.vy *= drag;
+    const drag = Math.pow(onTrack0 ? CONFIG.ONTRACK_DRAG : CONFIG.OFFTRACK_DRAG, dt * 60);
+    this.vx *= drag; this.vy *= drag;
 
-    // Begrens topp- og ryggefart
-    const sp = this.speed;
-    const maxRev = this.spec.topSpeed * CONFIG.REVERSE_FACTOR;
-    const cap = fwd >= 0 ? maxSpeed : maxRev;
-    if (sp > cap) { const k = cap / sp; this.vx *= k; this.vy *= k; }
+    // Fartstak — løsnet kort etter boost-aktivering så "kicket" får poppe
+    if (this.boostJustStarted <= 0) {
+      const sp = this.speed;
+      const maxRev = this.spec.topSpeed * CONFIG.REVERSE_FACTOR;
+      const cap = fwd >= 0 ? maxSpeed : maxRev;
+      if (sp > cap) { const k = cap / sp; this.vx *= k; this.vy *= k; }
+    }
 
-    // Flytt
     this.x += this.vx * dt;
     this.y += this.vy * dt;
 
+    // Én windowed projeksjon pr. frame (etter flytting)
+    this.near = track.nearestOnCenterNear(this.x, this.y, this.nearSeg);
+    this.nearSeg = this.near.segIndex;
+    const onTrack = this.near.dist <= track.halfWidth;
+
     this._handleWalls(track);
+    this._emit(dt, track, particles, onTrack, boosting);
     this._updateLap(track);
   }
 
   _handleWalls(track) {
-    const near = track.nearestOnCenter(this.x, this.y);
-    const wall = track.halfWidth + 26; // sandskulder før "vegg"
+    const near = this.near;
+    const wall = track.halfWidth + 26;
     if (near.dist > wall) {
-      const nx = (this.x - near.x) / (near.dist || 1);
-      const ny = (this.y - near.y) / (near.dist || 1);
-      // Skyv tilbake til veggen
+      const inv = 1 / (near.dist || 1);
+      const nx = (this.x - near.x) * inv, ny = (this.y - near.y) * inv;
       this.x = near.x + nx * wall;
       this.y = near.y + ny * wall;
-      // Fjern utovergående fart, behold litt
       const outward = this.vx * nx + this.vy * ny;
       if (outward > 0) {
         this.vx -= nx * outward * (1 + CONFIG.WALL_BOUNCE);
         this.vy -= ny * outward * (1 + CONFIG.WALL_BOUNCE);
+        if (outward > 30) {
+          this.hitWall = { x: this.x, y: this.y, nx: -nx, ny: -ny, speed: outward };
+          if (this.isPlayer && typeof Sound !== "undefined") Sound.thud(outward / 200);
+        }
       }
+    }
+  }
+
+  _emit(dt, track, particles, onTrack, boosting) {
+    if (!particles) return;
+    const sliding = this.wobble > 0.5 || this.slipTimer > 0 || boosting;
+    this.emitAcc += dt;
+    while (this.emitAcc >= 0.03) {
+      this.emitAcc -= 0.03;
+      const r = this.rearPoint(13);
+      if (onTrack && Math.abs(this.vx * Math.cos(this.heading) + this.vy * Math.sin(this.heading)) > 20)
+        particles.exhaust(r.x, r.y, this.heading);
+      if (!onTrack && this.speed > 40) particles.dirt(r.x, r.y, this.heading);
+      if (sliding && this.speed > 30) particles.smoke(r.x, r.y);
+    }
+    // Persistent skid-spor på asfalt
+    if (onTrack && sliding && this.speed > 40) {
+      this.skidAcc += dt;
+      if (this.skidAcc >= 0.03) { this.skidAcc = 0; track.bakeSkid(this.x, this.y, this.heading, 1); }
     }
   }
 
   _updateLap(track) {
-    const N = track.numWaypoints;
-    const wp = track.nearestWaypoint(this.x, this.y);
-    const prev = this.lastWp;
-
-    if (wp > N * 0.4 && wp < N * 0.6) this.passedHalf = true;
-
-    // Forover-kryssing av startlinja (fra siste fjerdedel til første)
-    if (prev > N * 0.7 && wp < N * 0.3) {
-      if (this.passedHalf) {
-        this.lap++;
-        this.passedHalf = false;
-        if (this.lap >= track.laps && !this.finished) {
-          this.finished = true;
-        }
-      }
-    } else if (prev < N * 0.3 && wp > N * 0.7) {
-      // Bakover over linja — ikke gi gratis runde
-      if (this.lap > 0) this.lap--;
-      this.passedHalf = true;
-    }
-
-    this.lastWp = wp;
-    this.progress = this.lap * N + wp;
+    const raw = track.arcLength(this.near.segIndex, this.near.t);
+    let d = raw - this.lastRaw;
+    const half = track.totalLen / 2;
+    if (d < -half) d += track.totalLen;       // krysset start/mål-sømmen forover
+    else if (d > half) d -= track.totalLen;    // bakover
+    this.cont += d;
+    this.lastRaw = raw;
+    this.progress = this.cont;                 // kontinuerlig — ingen rangerings-ties
+    const newLap = Math.max(0, Math.floor(this.cont / track.totalLen));
+    if (newLap >= track.laps && !this.finished) this.finished = true;
+    this.lap = newLap;
   }
 
-  // Senterpunkt litt bak bilen (til å slippe olje/røyk)
   rearPoint(dist = 18) {
     return { x: this.x - Math.cos(this.heading) * dist, y: this.y - Math.sin(this.heading) * dist };
   }

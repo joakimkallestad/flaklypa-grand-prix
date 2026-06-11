@@ -88,3 +88,35 @@ html, body {
 }
 .car-choice .name { font-size: 15px; color: #fff; font-weight: bold; }
 .car-choice .stats { font-size: 11px; color: #9bd; line-height: 1.5; }
+
+/* ---- Meny-valg ---- */
+#menu-options {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+  font-size: clamp(12px, 1.6vw, 16px);
+  color: #cde;
+}
+#menu-options b { color: #ffd23f; }
+#menu-options i { color: #788; font-style: normal; font-size: 0.85em; }
+
+/* ---- Pausemeny ---- */
+#pause { background: rgba(8, 12, 20, 0.55); }
+#pause-info { color: #9bd; font-size: clamp(13px, 1.8vw, 18px); }
+#pause-menu { display: flex; flex-direction: column; gap: 6px; margin: 6px 0; }
+.pmi {
+  font-size: clamp(15px, 2.2vw, 22px);
+  color: #cde;
+  padding: 4px 18px;
+  border: 2px solid transparent;
+  border-radius: 6px;
+}
+.pmi.selected { color: #ffd23f; border-color: #ffd23f; background: rgba(255, 210, 63, 0.08); }
+
+/* ---- Resultatskjerm ---- */
+#results { margin: 4px 0; }
+#results table { border-collapse: collapse; font-size: clamp(12px, 1.7vw, 17px); }
+#results th { color: #9bd; padding: 3px 14px; text-align: left; font-weight: normal; }
+#results td { padding: 3px 14px; color: #dfe; text-align: left; }
+#results tr.me td { color: #ffd23f; font-weight: bold; }

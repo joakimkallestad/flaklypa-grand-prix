@@ -7,6 +7,14 @@
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
+  <div id="err" style="position:fixed;top:0;left:0;right:0;z-index:99;color:#ff6a5a;background:#200;font:12px monospace;white-space:pre-wrap;padding:4px;display:none"></div>
+  <script>
+    window.addEventListener("error", (e) => {
+      const d = document.getElementById("err");
+      d.style.display = "block";
+      d.textContent += (e.message + " @ " + (e.filename || "").split("/").pop() + ":" + e.lineno) + "\n";
+    });
+  </script>
   <div id="game-wrap">
     <!-- Lav intern oppløsning, skaleres opp med nearest-neighbor (pixel art) -->
     <canvas id="screen" width="480" height="270"></canvas>
@@ -16,6 +24,11 @@
       <h1>FLÅKLYPA<br><span>GRAND PRIX</span></h1>
       <p class="pick">Velg bil — <b>←</b> / <b>→</b></p>
       <div id="car-choices"></div>
+      <div id="menu-options">
+        <span>Runder: <b id="opt-laps">3</b> <i>(L)</i></span>
+        <span>Vanskelighet: <b id="opt-diff">Normal</b> <i>(K)</i></span>
+        <span>Lyd: <b id="opt-sound">På</b> <i>(M)</i></span>
+      </div>
       <p class="start">Trykk <b>ENTER</b> for å starte</p>
       <p class="controls">Styr: piltaster / WASD &nbsp;·&nbsp; Bruk gjenstand: <b>MELLOMROM</b> &nbsp;·&nbsp; Pause: <b>ESC</b></p>
     </div>
@@ -24,13 +37,20 @@
     <div id="finish" class="overlay hidden">
       <h1>MÅL!</h1>
       <p id="finish-place"></p>
+      <div id="results"></div>
       <p class="start">Trykk <b>ENTER</b> for å kjøre igjen</p>
     </div>
 
     <!-- Pause-overlay -->
     <div id="pause" class="overlay hidden">
       <h1>PAUSE</h1>
-      <p class="start">Trykk <b>ESC</b> for å fortsette</p>
+      <p id="pause-info"></p>
+      <div id="pause-menu">
+        <div class="pmi selected">Fortsett</div>
+        <div class="pmi">Start på nytt</div>
+        <div class="pmi">Til meny</div>
+      </div>
+      <p class="controls"><b>↑</b>/<b>↓</b> velg &nbsp;·&nbsp; <b>ENTER</b> bekreft &nbsp;·&nbsp; <b>ESC</b> fortsett</p>
     </div>
   </div>
 
@@ -43,6 +63,8 @@
   <script src="js/ai.js"></script>
   <script src="js/powerups.js"></script>
   <script src="js/input.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/particles.js"></script>
   <script src="js/render.js"></script>
   <script src="js/main.js"></script>
 </body>

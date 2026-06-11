@@ -18,20 +18,27 @@ Bygget i ren **HTML5 Canvas + vanilla JavaScript** — ingen rammeverk, ingen by
 | ↓ / S | Brems / rygg |
 | ← → / A D | Styr |
 | Mellomrom | Bruk gjenstand |
-| Esc | Pause |
-| Enter | Start / kjør igjen |
+| Esc | Pause (meny: Fortsett / Start på nytt / Til meny) |
+| M | Demp/skru på lyd |
+| Enter | Start / bekreft / kjør igjen |
+
+I menyen: **←/→** velger bil, **L** endrer antall runder, **K** endrer vanskelighet, **M** skrur lyd av/på.
 
 ## Funksjoner
 
-- **Top-down pikselgrafikk** — lav intern oppløsning (480×270) skalert opp med nearest-neighbor for skarp pixel art. All grafikk er prosedyre-generert (ingen bildefiler).
-- **3 valgbare biler** med ulik toppfart, veigrep og akselerasjon.
-- **AI-motstandere** som følger banen, tar svinger og bruker gjenstander.
+- **Top-down pikselgrafikk** — lav intern oppløsning (480×270) skalert opp med nearest-neighbor for skarp pixel art. All grafikk er prosedyre-generert (ingen bildefiler), inkludert pre-rendrede rotasjonsframes for knivskarpe biler.
+- **3 valgbare biler** med ulik toppfart, veigrep og akselerasjon, og **distinkte AI-motstandere** med egne farger og navn.
+- **Smart AI** med racinglinje, kurvatur-basert svingbremsing, stuck-recovery, subtil rubber-banding og strategisk gjenstandsbruk.
 - **Power-ups:**
-  - ⚡ **Fartsboost** — midlertidig høyere toppfart.
+  - ⚡ **Fartsboost** — engangs-kick + midlertidig høyere toppfart.
   - 🛢️ **Oljesøl** — legges igjen bak deg; biler som treffer det mister grepet og sklir.
   - 💨 **Røyksky** — skjuler sikten og bremser bilene som kjører inn i den.
 - **Arcade-fysikk** med veigrep og sleng — du mister grep på gress og olje.
-- **Rundetelling** (3 runder), plassering, minimap og HUD.
+- **Partikkeleffekter** — eksos, grus, dekkrøyk, gnister ved veggtreff, og persistente dekkspor på asfalten.
+- **Syntetisert lyd (WebAudio, ingen lydfiler):** motor-drone som følger farten, dekkskrik, countdown-pip, boost/pickup/kollisjon-effekter og målfanfare.
+- **3-2-1-GO-nedtelling**, **rundetider + beste runde**, kamera med lookahead, screen shake, plassering med over-/underkjørings-blink, minimap og **resultatskjerm** med alle tider og gap.
+- **Menyvalg:** antall runder (3/5/7), vanskelighet (Lett/Normal/Vill) og lyd av/på — lagres mellom økter.
+- **Røde/hvite kantsteiner** i svingene og høst-scenery (furuskog, løvtrær, røde låver, steiner).
 
 ## Teknisk
 
@@ -39,16 +46,18 @@ Spillet lastes som klassiske skript i `index.html` (fungerer fra `file://`):
 
 | Fil | Ansvar |
 |-----|--------|
-| `js/config.js` | Konstanter (fysikk-tuning, banebredde, farger) |
-| `js/assets.js` | Prosedyre-genererte piksel-sprites (biler, dekor) |
-| `js/specs.js` | Bil-specs |
-| `js/track.js` | Bane (Catmull-Rom-senterlinje), off-track, rundetelling, for-rendret verdenskart |
-| `js/car.js` | Arcade top-down-bilfysikk (spiller + AI) |
-| `js/ai.js` | AI-styring (waypoint-følging, hindringsunngåelse) |
+| `js/config.js` | Konstanter (fysikk-tuning, banebredde, farger, kamera, balansering) |
+| `js/assets.js` | Prosedyre-genererte piksel-sprites + rotasjonsframes (biler, dekor) |
+| `js/specs.js` | Bil-specs + AI-liveries |
+| `js/track.js` | Bane (Catmull-Rom-senterlinje), arc-lengde-progresjon, kurvatur, kantstein, skid-lag, for-rendret verdenskart |
+| `js/car.js` | Arcade top-down-bilfysikk (spiller + AI), partikkel-emisjon, rundeprogresjon |
+| `js/ai.js` | AI-styring (racinglinje, svingbremsing, stuck-recovery, rubber-band, gjenstandsbruk) |
 | `js/powerups.js` | Pickup-bokser, oljesøl, røyksky, boost |
 | `js/input.js` | Tastatur |
-| `js/render.js` | All tegning + HUD + minimap |
-| `js/main.js` | Spilløkke + tilstandsmaskin (meny → løp → mål) |
+| `js/audio.js` | Syntetisert WebAudio-lydmotor (motor, dekkskrik, SFX, fanfare, demping) |
+| `js/particles.js` | Partikkelsystem (eksos, grus, røyk, gnister) |
+| `js/render.js` | All tegning + kamera + HUD + minimap + resultater |
+| `js/main.js` | Spilløkke + tilstandsmaskin (meny → countdown → løp → mål) |
 
 ## Lisens
 

@@ -4,8 +4,8 @@ class World {
     this.track = track;
     this.boxes = [];
     this.hazards = [];
+    this.particles = null; // settes i startRace
 
-    // Plasser pickup-bokser jevnt langs banen, vekslende sideforskyvning
     const N = track.numWaypoints;
     const count = 6;
     for (let i = 0; i < count; i++) {
@@ -26,7 +26,6 @@ class World {
   }
 
   update(dt, cars) {
-    // Bokser: respawn + plukking
     for (const b of this.boxes) {
       if (!b.active) {
         b.respawn -= dt;
@@ -39,24 +38,20 @@ class World {
           car.item = this.giveRandomItem();
           b.active = false;
           b.respawn = CONFIG.ITEM_RESPAWN;
+          if (car.isPlayer && typeof Sound !== "undefined") Sound.pickup();
           break;
         }
       }
     }
 
-    // Bruk gjenstander
     for (const car of cars) {
-      if (car.useItemNow && car.item) {
-        this._useItem(car);
-      }
+      if (car.useItemNow && car.item) this._useItem(car);
       car.useItemNow = false;
     }
 
-    // Hindringer forfaller
     for (const h of this.hazards) h.life -= dt;
     this.hazards = this.hazards.filter((h) => h.life > 0);
 
-    // Hindring-effekter på biler
     for (const h of this.hazards) {
       const r = h.type === "oil" ? CONFIG.OIL_RADIUS : CONFIG.SMOKE_RADIUS;
       for (const car of cars) {
@@ -72,27 +67,37 @@ class World {
   }
 
   _useItem(car) {
+    const isP = car.isPlayer && typeof Sound !== "undefined";
     if (car.item === "boost") {
       car.boostTimer = CONFIG.BOOST_TIME;
+      car.boostJustStarted = 0.2;
+      car.vx += Math.cos(car.heading) * CONFIG.BOOST_KICK;
+      car.vy += Math.sin(car.heading) * CONFIG.BOOST_KICK;
+      if (this.particles) {
+        const r = car.rearPoint(16);
+        this.particles.ring(r.x, r.y, [255, 180, 40], 8, 90, 0.4, 4, 1);
+      }
+      if (isP) Sound.boostWhoosh();
     } else if (car.item === "oil") {
       const r = car.rearPoint(20);
-      this.hazards.push({ type: "oil", x: r.x, y: r.y, life: CONFIG.OIL_TIME, maxLife: CONFIG.OIL_TIME });
+      this.hazards.push({ type: "oil", x: r.x, y: r.y, life: CONFIG.OIL_TIME, maxLife: CONFIG.OIL_TIME, ownerId: car.id });
+      if (this.particles) this.particles.ring(r.x, r.y, [30, 28, 40], 7, 50, 0.5, 3, 1);
+      if (isP) Sound.drop();
     } else if (car.item === "smoke") {
       const r = car.rearPoint(20);
-      this.hazards.push({ type: "smoke", x: r.x, y: r.y, life: CONFIG.SMOKE_TIME, maxLife: CONFIG.SMOKE_TIME, puffs: this._makePuffs() });
+      this.hazards.push({ type: "smoke", x: r.x, y: r.y, life: CONFIG.SMOKE_TIME, maxLife: CONFIG.SMOKE_TIME, ownerId: car.id, puffs: this._makePuffs() });
+      if (this.particles) this.particles.ring(r.x, r.y, [200, 202, 208], 9, 70, 0.6, 4, 12);
+      if (isP) Sound.drop();
     }
     car.item = null;
   }
 
   _makePuffs() {
     const puffs = [];
-    for (let i = 0; i < 7; i++) {
-      puffs.push({ ox: (Math.random() - 0.5) * 40, oy: (Math.random() - 0.5) * 40, r: 8 + Math.random() * 10 });
-    }
+    for (let i = 0; i < 7; i++) puffs.push({ ox: (Math.random() - 0.5) * 40, oy: (Math.random() - 0.5) * 40, r: 8 + Math.random() * 10 });
     return puffs;
   }
 
-  // Hindre at biler stabler seg oppå hverandre — mild dytting fra hverandre
   _separateCars(cars) {
     const minDist = 22;
     for (let i = 0; i < cars.length; i++) {
@@ -105,9 +110,9 @@ class World {
           dx /= d; dy /= d;
           a.x -= dx * push; a.y -= dy * push;
           b.x += dx * push; b.y += dy * push;
-          // litt fartsutveksling
           a.vx -= dx * 8; a.vy -= dy * 8;
           b.vx += dx * 8; b.vy += dy * 8;
+          if ((a.isPlayer || b.isPlayer) && typeof Sound !== "undefined") Sound.thud(0.4);
         }
       }
     }

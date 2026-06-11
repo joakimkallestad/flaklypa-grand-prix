@@ -34,3 +34,12 @@ const CAR_SPECS = [
 ];
 
 function getSpec(id) { return CAR_SPECS.find((s) => s.id === id) || CAR_SPECS[0]; }
+
+// Distinkte farger/lakk for AI-bilene (Flåklypa-inspirert rollebesetning).
+const AI_LIVERIES = [
+  { name: "Solan", body: "#2fae5e", light: "#5fd488", dark: "#1c7a40", stripe: "#ffffff", helmet: "#e0a020" },
+  { name: "Ludvig", body: "#7b4fb0", light: "#a47fd0", dark: "#4f2f78", stripe: "#ffe066", helmet: "#fff" },
+  { name: "Frimand", body: "#e06a1f", light: "#f7944a", dark: "#9c440f", stripe: "#222", helmet: "#2e7de0" },
+  { name: "Mysil", body: "#19b3c4", light: "#5fd8e6", dark: "#0f7682", stripe: "#fff", helmet: "#e03c5a" },
+  { name: "Frÿk", body: "#c4324f", light: "#e8627d", dark: "#841f34", stripe: "#fff", helmet: "#222" },
+];
