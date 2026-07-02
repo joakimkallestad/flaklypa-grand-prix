@@ -336,7 +336,7 @@ const Game = {
 
   // ---------- UI / tastetrykk utenfor fysikk ----------
   handleUI() {
-    if (Input.consume("KeyM") && typeof Sound !== "undefined") { Sound.toggleMute(); this._refreshOptions(); }
+    if (Input.consume("KeyM") && typeof Sound !== "undefined") { Sound.toggleMute(); this._refreshOptions(); this._refreshPauseSound(); }
 
     if (this.mode === "menu") {
       if (Input.consume("ArrowLeft")) { this.selected = (this.selected + CAR_SPECS.length - 1) % CAR_SPECS.length; this._refreshCarStrip("car-choices", this.selected); }
@@ -354,13 +354,14 @@ const Game = {
     } else if (this.mode === "race" || this.mode === "finishing") {
       if (Input.consume("Escape")) { this._pausedFrom = this.mode; this.mode = "paused"; this.pauseSel = 0; this.placeFlash = null; this._showPause(); if (typeof Sound !== "undefined") Sound.duckEngine(true); }
     } else if (this.mode === "paused") {
-      if (Input.consume("ArrowUp")) { this.pauseSel = (this.pauseSel + 2) % 3; this._refreshPauseSel(); }
-      if (Input.consume("ArrowDown")) { this.pauseSel = (this.pauseSel + 1) % 3; this._refreshPauseSel(); }
+      if (Input.consume("ArrowUp")) { this.pauseSel = (this.pauseSel + 3) % 4; this._refreshPauseSel(); }
+      if (Input.consume("ArrowDown")) { this.pauseSel = (this.pauseSel + 1) % 4; this._refreshPauseSel(); }
       if (Input.consume("Escape")) this._resume();
       if (Input.consume("Enter", "NumpadEnter")) {
         if (this.pauseSel === 0) this._resume();
-        else if (this.pauseSel === 1) { if (typeof Sound !== "undefined") Sound.stopEngine(); this.startRace(false, this.options.players); }
-        else { if (typeof Sound !== "undefined") Sound.stopEngine(); this.mode = "menu"; this.showOverlay("menu"); }
+        else if (this.pauseSel === 1) { if (typeof Sound !== "undefined") Sound.toggleMute(); this._refreshOptions(); this._refreshPauseSound(); }
+        else if (this.pauseSel === 2) { if (typeof Sound !== "undefined") Sound.stopEngine(); this.startRace(false, this.options.players); }
+        else { if (typeof Sound !== "undefined") Sound.stopEngine(); this.mode = "menu"; this.showOverlay("menu"); this._refreshOptions(); }
       }
     } else if (this.mode === "finish") {
       if (Input.consume("Enter", "NumpadEnter")) { this.mode = "menu"; this.showOverlay("menu"); }
@@ -374,11 +375,16 @@ const Game = {
   },
   _showPause() {
     document.getElementById("pause-info").textContent = `Runde ${this.player.displayLap(this.track)}/${this.track.laps} · ${Renderer.formatTime(this.raceTime)}`;
+    this._refreshPauseSound();
     this._refreshPauseSel();
     this.showOverlay("pause");
   },
   _refreshPauseSel() {
     document.querySelectorAll("#pause-menu .pmi").forEach((el, i) => el.classList.toggle("selected", i === this.pauseSel));
+  },
+  _refreshPauseSound() {
+    const el = document.getElementById("pmi-sound");
+    if (el) el.textContent = "Lyd: " + ((typeof Sound !== "undefined" && Sound.muted) ? "Av" : "På");
   },
 };
 
