@@ -12,20 +12,23 @@ Bygget i ren **HTML5 Canvas + vanilla JavaScript** — ingen rammeverk, ingen by
 
 ### Kontroller
 
-| Tast | Handling |
-|------|----------|
-| ↑ / W | Gass |
-| ↓ / S | Brems / rygg |
-| ← → / A D | Styr |
-| Mellomrom | Bruk gjenstand |
-| Esc | Pause (meny: Fortsett / Start på nytt / Til meny) |
-| M | Demp/skru på lyd |
-| Enter | Start / bekreft / kjør igjen |
+| Tast | Spiller 1 | Spiller 2 |
+|------|-----------|-----------|
+| Gass | ↑ | W |
+| Brems / rygg | ↓ | S |
+| Styr | ← → | A D |
+| Bruk gjenstand | Mellomrom | Venstre Shift |
 
-I menyen: **←/→** velger bil, **L** endrer antall runder, **K** endrer vanskelighet, **M** skrur lyd av/på.
+Felles: **Esc** pause (Fortsett / Start på nytt / Til meny), **M** lyd av/på, **Enter** start/bekreft.
+
+I menyen: **P** velger 1 eller 2 spillere, **←/→** velger bil for P1, **A/D** for P2, **L** antall runder, **K** vanskelighet.
 
 ## Funksjoner
 
+- **To spillere på delt skjerm** — vertikal splitt med hvert sitt kamera og HUD; P1 på piltaster, P2 på WASD, pluss AI-motstandere.
+- **Nordisk miljø** — bjørk-, furu- og granskog med varianter, tømmerhus, fjell og fjord som ytre grense.
+- **Synlige barrierer og snarveier** — steinrekker langs banen med bevisste gap i svingene; gambling over gresset er tregere men kortere, og gresset får **hjulspor som blir tydeligere jo flere som kjører der**.
+- **Taktiske hindringer** — olje og røyk rammer kun bilene bak, aldri den som bruker dem; oljesøl blir liggende lenge og mister gradvis effekt.
 - **Top-down pikselgrafikk** — lav intern oppløsning (480×270) skalert opp med nearest-neighbor for skarp pixel art. All grafikk er prosedyre-generert (ingen bildefiler), inkludert pre-rendrede rotasjonsframes for knivskarpe biler.
 - **3 valgbare biler** med ulik toppfart, veigrep og akselerasjon, og **distinkte AI-motstandere** med egne farger og navn.
 - **Smart AI** med racinglinje, kurvatur-basert svingbremsing, stuck-recovery, subtil rubber-banding og strategisk gjenstandsbruk.

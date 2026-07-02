@@ -2,9 +2,9 @@
 // strategisk gjenstandsbruk og smartere hindrings-unngåelse.
 const AI = {
   control(car, track, world, dt, cars) {
-    // --- Stuck-recovery: rygg ut hvis fast utenfor banen i lav fart ---
+    // --- Stuck-recovery: rygg ut hvis fast (off-track eller mot barriere) i lav fart ---
     const onTrack = car.near.dist <= track.halfWidth;
-    if (!onTrack && car.speed < 20) car.lowSpeedTime += dt; else car.lowSpeedTime = 0;
+    if ((!onTrack || car.bumpTimer > 0) && car.speed < 20) car.lowSpeedTime += dt; else car.lowSpeedTime = 0;
     if (car.lowSpeedTime > 1.2 && car.recoverTimer <= 0) car.recoverTimer = 0.7;
     if (car.recoverTimer > 0) {
       car.recoverTimer -= dt;
@@ -32,6 +32,7 @@ const AI = {
     let desired = Math.atan2(ty - car.y, tx - car.x);
     let diff = angleNorm(desired - car.heading);
     diff += this._avoidHazards(car, world);
+    diff += this._avoidBarriers(car, track);
     const steer = clamp(diff * 2.2, -1, 1);
 
     // Hjørnefart fra kurvatur (lavere grep = bremser tidligere)
@@ -81,6 +82,27 @@ const AI = {
     }
     if (!worst) return 0;
     return (worst.rel > 0 ? -1 : 1) * (1 - worst.d / ahead) * 0.9;
+  },
+
+  _avoidBarriers(car, track) {
+    if (!track.barriers) return 0;
+    const probe = 46;
+    const fx = car.x + Math.cos(car.heading) * probe, fy = car.y + Math.sin(car.heading) * probe;
+    let worst = null, worstD = 56;
+    for (const b of track.barriersNear(fx, fy)) {
+      let cx, cy;
+      if (b.kind === "circle") { cx = b.x; cy = b.y; }
+      else {
+        const dx = b.x2 - b.x1, dy = b.y2 - b.y1, L2 = dx * dx + dy * dy || 1;
+        let t = ((fx - b.x1) * dx + (fy - b.y1) * dy) / L2; t = t < 0 ? 0 : t > 1 ? 1 : t;
+        cx = b.x1 + t * dx; cy = b.y1 + t * dy;
+      }
+      const d = Math.hypot(cx - fx, cy - fy) - b.r;
+      if (d < worstD) { worstD = d; worst = { cx, cy, d }; }
+    }
+    if (!worst) return 0;
+    const rel = angleNorm(Math.atan2(worst.cy - car.y, worst.cx - car.x) - car.heading);
+    return (rel > 0 ? -1 : 1) * (1 - Math.max(0, worst.d) / 56) * 1.0;
   },
 
   _maybeUseItem(car, diff, maxCurv, dt, cars, track) {

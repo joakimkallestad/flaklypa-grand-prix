@@ -70,9 +70,12 @@ class Particles {
     }
   }
 
-  draw(ctx, sx, sy, layer) {
+  draw(ctx, sx, sy, layer, VW, VH) {
+    const w = VW || CONFIG.VIEW_W, h = VH || CONFIG.VIEW_H;
     for (const p of this.list) {
       if (p.layer !== layer) continue;
+      const px = sx(p.x), py = sy(p.y);
+      if (px < -10 || px > w + 10 || py < -10 || py > h + 10) continue; // bounds-cull (delt skjerm)
       const f = 1 - p.life / p.maxLife;       // 0→1 over levetid
       const a = Math.max(0, p.life / p.maxLife);
       const r = p.r0 + (p.r1 - p.r0) * f;
@@ -80,9 +83,8 @@ class Particles {
       const cg = Math.round(p.col0[1] + (p.col1[1] - p.col0[1]) * f);
       const cb = Math.round(p.col0[2] + (p.col1[2] - p.col0[2]) * f);
       ctx.fillStyle = "rgba(" + cr + "," + cg + "," + cb + "," + a.toFixed(3) + ")";
-      const X = Math.round(sx(p.x) - r), Y = Math.round(sy(p.y) - r);
       const s = Math.max(1, Math.round(r * 2));
-      ctx.fillRect(X, Y, s, s);
+      ctx.fillRect(Math.round(px - r), Math.round(py - r), s, s);
     }
   }
 }

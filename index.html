@@ -22,15 +22,24 @@
     <!-- Meny-overlay -->
     <div id="menu" class="overlay">
       <h1>FLÅKLYPA<br><span>GRAND PRIX</span></h1>
-      <p class="pick">Velg bil — <b>←</b> / <b>→</b></p>
-      <div id="car-choices"></div>
+      <div id="car-select">
+        <div id="car-select-p1">
+          <p class="pick">Spiller 1 — <b>←</b> / <b>→</b></p>
+          <div id="car-choices"></div>
+        </div>
+        <div id="car-select-p2" class="hidden">
+          <p class="pick">Spiller 2 — <b>A</b> / <b>D</b></p>
+          <div id="car-choices2"></div>
+        </div>
+      </div>
       <div id="menu-options">
+        <span>Spillere: <b id="opt-players">1</b> <i>(P)</i></span>
         <span>Runder: <b id="opt-laps">3</b> <i>(L)</i></span>
         <span>Vanskelighet: <b id="opt-diff">Normal</b> <i>(K)</i></span>
         <span>Lyd: <b id="opt-sound">På</b> <i>(M)</i></span>
       </div>
       <p class="start">Trykk <b>ENTER</b> for å starte</p>
-      <p class="controls">Styr: piltaster / WASD &nbsp;·&nbsp; Bruk gjenstand: <b>MELLOMROM</b> &nbsp;·&nbsp; Pause: <b>ESC</b></p>
+      <p class="controls">P1: piltaster + <b>MELLOMROM</b> &nbsp;·&nbsp; P2: <b>WASD</b> + <b>V.SHIFT</b> &nbsp;·&nbsp; Pause: <b>ESC</b></p>
     </div>
 
     <!-- Mål-overlay -->

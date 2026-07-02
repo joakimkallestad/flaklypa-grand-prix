@@ -56,9 +56,12 @@ class World {
       const r = h.type === "oil" ? CONFIG.OIL_RADIUS : CONFIG.SMOKE_RADIUS;
       for (const car of cars) {
         if (car.finished) continue;
+        if (car.id === h.ownerId) continue;   // eier er immun mot egen olje/røyk (kun biler bak rammes)
         if (Math.hypot(car.x - h.x, car.y - h.y) < r) {
-          if (h.type === "oil") car.slipTimer = CONFIG.OIL_SLIP_TIME;
-          else car.smokeTimer = Math.max(car.smokeTimer, 0.5);
+          if (h.type === "oil") {
+            const s = clamp(h.life / CONFIG.OIL_FADE, 0, 1);   // demper mot slutten av levetiden
+            if (s > 0.05) car.slipTimer = Math.max(car.slipTimer, CONFIG.OIL_SLIP_TIME * s);
+          } else car.smokeTimer = Math.max(car.smokeTimer, 0.5);
         }
       }
     }

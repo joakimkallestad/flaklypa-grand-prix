@@ -23,7 +23,7 @@ html, body {
   image-rendering: crisp-edges;
   width: min(100vw, 177.78vh);   /* behold 16:9 */
   height: min(56.25vw, 100vh);
-  background: #2d5a2d;
+  background: #4a6b3f;
   display: block;
 }
 
@@ -59,9 +59,18 @@ html, body {
 @keyframes blink { 50% { opacity: 0.35; } }
 
 /* ---- Bilvalg ---- */
-#car-choices {
+#car-select {
   display: flex;
-  gap: 22px;
+  gap: 40px;
+  align-items: flex-start;
+  justify-content: center;
+}
+#car-select-p2.hidden { display: none; }
+#car-select .pick { margin-bottom: 4px; }
+#car-select-p2 .pick { color: #5fd8e6; }
+#car-choices, #car-choices2 {
+  display: flex;
+  gap: 18px;
   align-items: flex-end;
   margin: 6px 0;
 }
@@ -120,3 +129,4 @@ html, body {
 #results th { color: #9bd; padding: 3px 14px; text-align: left; font-weight: normal; }
 #results td { padding: 3px 14px; color: #dfe; text-align: left; }
 #results tr.me td { color: #ffd23f; font-weight: bold; }
+#results tr.p2 td { color: #5fd8e6; font-weight: bold; }
